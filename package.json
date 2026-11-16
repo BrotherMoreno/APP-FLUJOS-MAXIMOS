@@ -1,0 +1,44 @@
+{
+  "name": "flujomaximo",
+  "productName": "FlujoMaximo",
+  "version": "2.0.0",
+  "description": "Aplicacion interactiva de Matematica Computacional para modelar redes y calcular el flujo maximo (Edmonds-Karp).",
+  "author": "Brother Cordova",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "pe.brothermoreno.flujomaximo",
+    "productName": "FlujoMaximo",
+    "copyright": "Brother Cordova",
+    "asar": false,
+    "directories": { "output": "dist" },
+    "files": ["main.js", "package.json", "www/**/*"],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "language": "3082",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    }
+  }
+}

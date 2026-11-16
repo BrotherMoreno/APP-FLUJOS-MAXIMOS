@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e1e2e">
+<title>Flujo Máximo — Edmonds-Karp</title>
+<style>
+:root{--bg:#1e1e2e;--p:#181826;--p2:#242536;--bd:#3a3c52;--tx:#cdd6f4;--mut:#8b90ad;--az:#89b4fa;--ve:#a6e3a1;--ro:#f38ba8;--na:#fab387;--gr:#313244;--os:#11111b;
+--ease:cubic-bezier(.23,1,.32,1);--r:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;overflow:hidden}
+#app{display:grid;height:100%;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(300px,380px) 1fr;grid-template-areas:"top top" "mat red" "bot bot";padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.card{background:var(--p);border-radius:var(--r);margin:6px;min-height:0;min-width:0}
+#top{grid-area:top;padding:10px 14px}#mat{grid-area:mat;display:flex;flex-direction:column;padding:10px}#red{grid-area:red;padding:1px;background:var(--bd);overflow:hidden}#bot{grid-area:bot;padding:8px 10px;height:250px;display:flex;flex-direction:column;gap:6px}
+h1{font-size:16px;margin:0 0 8px;color:var(--az);letter-spacing:-.01em}
+.fila{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+label{color:var(--mut);font-size:12px}
+button,select,input,textarea{font:inherit;color:var(--tx)}
+button{border:0;border-radius:10px;background:var(--gr);padding:7px 12px;font-weight:600;cursor:pointer;min-height:34px;transition:transform .16s var(--ease),background-color .16s var(--ease),opacity .16s var(--ease)}
+button:active:not(:disabled){transform:scale(.97)}button:disabled{opacity:.4;cursor:default}
+@media (hover:hover){button:hover:not(:disabled){background:#40415a}}
+button.az{background:var(--az);color:var(--os)}button.ve{background:var(--ve);color:var(--os)}button.na{background:var(--na);color:var(--os)}
+@media (hover:hover){button.az:hover:not(:disabled){background:#a3c4fb}button.ve:hover:not(:disabled){background:#bcecb8}button.na:hover:not(:disabled){background:#fcc3a3}}
+button.on{background:var(--az);color:var(--os)}
+select,input[type=number],textarea{background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:6px 8px;min-height:34px}
+input[type=number]{width:62px}
+.tabs{display:flex;gap:6px;margin:6px 0}.tabs button{flex:1}
+#gwrap{flex:1;overflow:auto;border-radius:8px;background:var(--p2)}
+table.g{border-collapse:collapse;margin:0}
+table.g th{position:sticky;top:0;left:0;background:var(--p);color:var(--mut);font-size:11px;font-weight:600;padding:4px;z-index:1}
+table.g td{padding:0;border:1px solid var(--bd)}
+table.g input{width:42px;height:34px;border:0;background:transparent;text-align:center;padding:0;font-variant-numeric:tabular-nums;outline:0;color:var(--tx);font-size:14px}
+table.g input:focus{background:#2c3a5e;box-shadow:inset 0 0 0 2px var(--az)}
+table.g td.dg{background:#3c3c4b}table.g td.hl{background:#5c3e28}table.g td.fl{background:#283e2e}table.g td.cero input{color:#6e728c}
+#red iframe{width:100%;height:100%;border:0;border-radius:11px;background:#181826;display:block}
+#nav{display:flex;flex-wrap:wrap;gap:6px;align-items:center}#nav .sp{flex:1}
+#flujo{color:var(--ve);font-weight:700;font-size:16px}#lpaso{color:var(--na);font-weight:700}
+#barra{width:100%;accent-color:var(--na);height:22px;margin:0}
+#info{display:grid;grid-template-columns:minmax(220px,1fr) 1.4fr;gap:8px;flex:1;min-height:0}
+#log{background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:8px;overflow:auto;white-space:pre-wrap;font:12.5px/1.5 ui-monospace,Consolas,monospace}
+#tcamb{overflow:auto;background:var(--p2);border-radius:8px}#tcamb table{width:100%;border-collapse:collapse;font-size:12.5px}#tcamb th,#tcamb td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--bd)}#tcamb th{position:sticky;top:0;background:var(--p);color:var(--az)}
+dialog{background:var(--p);color:var(--tx);border:1px solid var(--bd);border-radius:16px;padding:16px;width:min(560px,94vw);max-height:92vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.6)}dialog h2{margin:0 0 10px;font-size:16px}
+dialog[open]{animation:pop .22s var(--ease)}@keyframes pop{from{opacity:0;transform:scale(.96)}}
+#video,#foto{width:100%;max-height:36vh;object-fit:contain;background:#000;border-radius:10px;display:none}
+.aviso{color:var(--na);font-size:12.5px;margin:6px 0}
+@media (max-width:820px){
+ html,body{overflow:auto}#app{display:block;height:auto}
+ #mat{height:auto}#gwrap{max-height:300px;flex:none}#red{height:62vh;margin:6px}#bot{height:auto;min-height:0}
+ #info{grid-template-columns:1fr}#log{max-height:150px}#tcamb{max-height:180px}}
+</style>
+</head>
+<body>
+<div id="app">
+ <section id="top" class="card">
+  <h1>Problema del Flujo Máximo — Edmonds-Karp</h1>
+  <div class="fila">
+   <label>Vértices <input id="n" type="number" min="3" max="15" value="6"></label>
+   <label>Grado máx. <input id="gmax" type="number" min="2" max="6" value="3"></label>
+   <button class="az" id="bGen">Generar automática</button>
+   <button id="bVacia">Matriz vacía (manual)</button>
+   <button id="bScan">📷 Escanear matriz</button>
+   <button id="bPegar">📋 Pegar / aristas</button>
+  </div>
+  <div class="fila" style="margin-top:8px">
+   <label style="color:var(--ve)">Fuente <select id="cs"></select></label>
+   <label style="color:var(--ro)">Sumidero <select id="ct"></select></label>
+   <button class="ve" id="bCalc">Calcular flujo máximo</button>
+   <span class="sp" style="flex:1"></span>
+   <label>Vista</label><button id="b3d" class="on">3D</button><button id="b2d">2D</button><button id="bFit">Ajustar</button>
+  </div>
+ </section>
+ <section id="mat" class="card">
+  <div style="font-weight:700">MATRIZ <span style="color:var(--mut);font-weight:400;font-size:12px">(editable en Capacidad · Excel: pega con Ctrl+V)</span></div>
+  <div class="tabs"><button id="m0" class="on">Capacidad</button><button id="m1">Flujo</button><button id="m2">Residual</button></div>
+  <div id="gwrap"></div>
+ </section>
+ <section id="red" class="card"><iframe id="vista" title="Red de flujo"></iframe></section>
+ <section id="bot" class="card">
+  <input id="barra" type="range" min="0" max="0" value="0" disabled>
+  <div id="nav">
+   <button id="bPrev" disabled>◀ Anterior</button><button id="bNext" disabled>Siguiente ▶</button>
+   <button class="ve" id="bPlay" disabled>▶ Reproducir</button><button id="bRe" disabled>Reiniciar</button>
+   <span class="sp"></span><span id="lpaso"></span><span id="flujo">Flujo actual: -</span>
+  </div>
+  <div id="info"><div id="log"></div><div id="tcamb"></div></div>
+ </section>
+</div>
+
+<dialog id="dScan">
+ <h2>Escanear matriz con la cámara o una foto</h2>
+ <div class="fila">
+  <button class="az" id="sCam">Usar cámara</button>
+  <label class="fila" style="gap:0"><button type="button" id="sFileBtn">Elegir / tomar foto</button></label>
+  <input type="file" id="sFile" accept="image/*" capture="environment" hidden>
+  <button id="sShot" style="display:none">Capturar</button>
+ </div>
+ <p class="aviso" style="color:var(--mut)">Tip: escribe o imprime la matriz con números claros, fondo liso, buena luz y la hoja recta. Puede llevar encabezados v0, v1… (se detectan solos).</p>
+ <video id="video" playsinline muted></video><canvas id="foto"></canvas>
+ <div class="fila" style="margin-top:8px"><button class="ve" id="sRun" disabled>Reconocer números</button><span id="sEst" style="color:var(--mut)"></span></div>
+ <div id="sAv"></div><div id="sPrev" style="overflow:auto;margin-top:8px"></div>
+ <div class="fila" style="margin-top:10px;justify-content:flex-end"><button id="sCerrar">Cerrar</button><button class="az" id="sApply" disabled>Aplicar a la matriz</button></div>
+</dialog>
+
+<dialog id="dPegar">
+ <h2>Pegar matriz o lista de aristas</h2>
+ <p style="color:var(--mut);margin:0 0 8px;font-size:12.5px">Pega una matriz (desde Excel, CSV o texto) <b>o</b> una arista por línea: <code>0 1 10</code>, <code>v0->v1:10</code>, <code>0,1,10</code> (origen, destino, capacidad).</p>
+ <textarea id="pTxt" rows="10" style="width:100%;font-family:ui-monospace,Consolas,monospace" placeholder="0 1 10&#10;0 2 8&#10;1 3 5"></textarea>
+ <div class="fila" style="margin-top:10px;justify-content:flex-end"><button id="pCerrar">Cerrar</button><button class="az" id="pApply">Aplicar</button></div>
+</dialog>
+
+<script>window.RENDERER_HTML = "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n<style>\n  html, body { margin:0; padding:0; overflow:hidden; background:#181826; }\n  #lienzo { display:block; cursor:grab; }\n  #ayuda { position:absolute; left:12px; bottom:8px; color:#8b90ad; font-family:Segoe UI, Arial, sans-serif; font-size:12px; }\n<\/style>\n<\/head>\n<body>\n<canvas id=\"lienzo\"><\/canvas>\n<div id=\"ayuda\"><\/div>\n<script>\nvar canvas = document.getElementById(\"lienzo\");\nvar ctx = canvas.getContext(\"2d\");\nvar ayuda = document.getElementById(\"ayuda\");\n\nvar estado = null;\nvar modo = \"3d\";\nvar claveLayout = \"\";\nvar unit3 = [], unit2 = [];\nvar angY = 0.6, angX = -0.35, zoom3 = 1.0, pan3X = 0, pan3Y = 0;\nvar zoom2 = 1.0, pan2X = 0, pan2Y = 0;\nvar arr = false, tipoArr = \"\", nodoArr = -1, ultX = 0, ultY = 0;\nvar R3 = 200;\nvar MARGEN_SUP = 74, MARGEN_INF = 36;\n\nvar COL = {\n  fuente: [166,227,161], sumidero: [243,139,168], normal: [137,180,250],\n  camino: [250,179,135], saturada: [243,139,168], flujo: [166,227,161], libre: [104,108,136]\n};\nfunction rgb(c, a) {\n  if (a === undefined) return \"rgb(\" + c[0] + \",\" + c[1] + \",\" + c[2] + \")\";\n  return \"rgba(\" + c[0] + \",\" + c[1] + \",\" + c[2] + \",\" + a + \")\";\n}\nfunction claro(c) { return \"rgb(\" + Math.min(255, c[0] + 70) + \",\" + Math.min(255, c[1] + 70) + \",\" + Math.min(255, c[2] + 70) + \")\"; }\nfunction oscuro(c) { return \"rgb(\" + Math.max(0, c[0] - 70) + \",\" + Math.max(0, c[1] - 70) + \",\" + Math.max(0, c[2] - 70) + \")\"; }\nfunction radioNodo(esc) { return Math.max(7, 21 * esc); }\n\nfunction actualizarAyuda() {\n  ayuda.innerHTML = (modo === \"3d\")\n    ? \"Arrastrar: rotar | Shift+arrastrar: desplazar | Rueda o pellizco: zoom | Doble clic: ajustar\"\n    : \"Arrastrar v&eacute;rtice: mover &nbsp;|&nbsp; Arrastrar fondo: desplazar &nbsp;|&nbsp; Rueda: zoom &nbsp;|&nbsp; Doble clic: ajustar vista\";\n}\n\nfunction ajustarTamano() {\n  canvas.width = window.innerWidth;\n  canvas.height = window.innerHeight;\n  R3 = Math.min(canvas.width, canvas.height) * 0.40;\n  if (estado) ajustarVista(); else dibujar();\n}\nwindow.addEventListener(\"resize\", ajustarTamano);\n\nfunction esfera(n) {\n  var pts = [];\n  if (n <= 1) { pts.push({ x: 0, y: 0, z: 0 }); return pts; }\n  var off = 2.0 / n, inc = Math.PI * (3.0 - Math.sqrt(5.0));\n  for (var i = 0; i < n; i++) {\n    var y = (i * off) - 1 + off / 2;\n    var r = Math.sqrt(Math.max(0, 1 - y * y));\n    var phi = i * inc;\n    pts.push({ x: Math.cos(phi) * r, y: y, z: Math.sin(phi) * r });\n  }\n  return pts;\n}\n\n/* Distribucion de nodos:\n   3D -> esfera de Fibonacci (fuente arriba, sumidero abajo).\n   2D -> capas por distancia BFS desde la fuente (fuente a la izquierda,\n         sumidero a la derecha), como un diagrama de red clasico. */\nfunction calcularLayouts() {\n  var n = estado.n, f = estado.fuente, s = estado.sumidero, cap = estado.capacidad;\n  var base = esfera(n), orden = [f], i, k;\n  for (i = 0; i < n; i++) if (i !== f && i !== s) orden.push(i);\n  if (s !== f) orden.push(s);\n  unit3 = new Array(n);\n  for (k = 0; k < n; k++) unit3[orden[k]] = base[k];\n\n  var dist = [], cola = [f];\n  for (i = 0; i < n; i++) dist[i] = -1;\n  dist[f] = 0;\n  while (cola.length > 0) {\n    var u = cola.shift();\n    for (var v = 0; v < n; v++) if (dist[v] < 0 && cap[u][v] > 0) { dist[v] = dist[u] + 1; cola.push(v); }\n  }\n  var maxD = 0;\n  for (i = 0; i < n; i++) if (i !== s && dist[i] > maxD) maxD = dist[i];\n  var capa = [];\n  for (i = 0; i < n; i++) capa[i] = (dist[i] < 0) ? maxD + 1 : dist[i];\n  var L = 0;\n  for (i = 0; i < n; i++) if (i !== s && capa[i] > L) L = capa[i];\n  L = L + 1;\n  capa[s] = L;\n  var grupos = [];\n  for (i = 0; i <= L; i++) grupos.push([]);\n  for (i = 0; i < n; i++) grupos[capa[i]].push(i);\n  unit2 = new Array(n);\n  for (var c = 0; c <= L; c++) {\n    var g = grupos[c], m = g.length;\n    for (k = 0; k < m; k++) {\n      var x = (L === 0) ? 0 : -1 + 2 * c / L;\n      var y = (m === 1) ? 0 : -1 + 2 * k / (m - 1);\n      if (m > 2) x += (k % 2 === 0) ? -0.05 : 0.05;\n      unit2[g[k]] = { x: x, y: y };\n    }\n  }\n}\n\nfunction rotar(p) {\n  var cy = Math.cos(angY), sy = Math.sin(angY);\n  var x1 = p.x * cy - p.z * sy, z1 = p.x * sy + p.z * cy;\n  var cx = Math.cos(angX), sx = Math.sin(angX);\n  return { x: x1, y: p.y * cx - z1 * sx, z: p.y * sx + z1 * cx };\n}\nfunction proy3(i) {\n  var r = rotar(unit3[i]);\n  var f = 3.0 / (3.0 + r.z);\n  return { x: canvas.width / 2 + pan3X + r.x * R3 * f * zoom3,\n           y: canvas.height / 2 + pan3Y + r.y * R3 * f * zoom3,\n           escala: f * zoom3, z: r.z };\n}\nfunction proy2(i) {\n  var p = unit2[i];\n  return { x: canvas.width / 2 + pan2X + p.x * canvas.width * 0.40 * zoom2,\n           y: canvas.height / 2 + pan2Y + p.y * canvas.height * 0.36 * zoom2,\n           escala: Math.sqrt(zoom2), z: 0 };\n}\nfunction proyectarTodos() {\n  var P = [];\n  for (var i = 0; i < estado.n; i++) P.push(modo === \"3d\" ? proy3(i) : proy2(i));\n  return P;\n}\nfunction caja(P) {\n  var b = { minX: 1e9, minY: 1e9, maxX: -1e9, maxY: -1e9 };\n  for (var i = 0; i < P.length; i++) {\n    var r = radioNodo(P[i].escala) + 30;\n    if (P[i].x - r < b.minX) b.minX = P[i].x - r;\n    if (P[i].x + r > b.maxX) b.maxX = P[i].x + r;\n    if (P[i].y - r < b.minY) b.minY = P[i].y - r;\n    if (P[i].y + r > b.maxY) b.maxY = P[i].y + r;\n  }\n  return b;\n}\n/* Ajusta zoom y desplazamiento para que toda la red quepa en el panel. */\nfunction ajustarVista() {\n  if (!estado) { dibujar(); return; }\n  if (modo === \"3d\") { zoom3 = 1; pan3X = 0; pan3Y = 0; } else { zoom2 = 1; pan2X = 0; pan2Y = 0; }\n  var dispW = canvas.width - 24, dispH = canvas.height - MARGEN_SUP - MARGEN_INF;\n  for (var it = 0; it < 3; it++) {\n    var b = caja(proyectarTodos());\n    var fz = Math.min(dispW / (b.maxX - b.minX), dispH / (b.maxY - b.minY));\n    if (modo === \"3d\") zoom3 = Math.max(0.15, Math.min(10, zoom3 * fz));\n    else zoom2 = Math.max(0.15, Math.min(10, zoom2 * fz));\n  }\n  var b2 = caja(proyectarTodos());\n  var dx = canvas.width / 2 - (b2.minX + b2.maxX) / 2;\n  var dy = (MARGEN_SUP + dispH / 2) - (b2.minY + b2.maxY) / 2;\n  if (modo === \"3d\") { pan3X += dx; pan3Y += dy; } else { pan2X += dx; pan2Y += dy; }\n  dibujar();\n}\n\nfunction flecha(x2, y2, ang, tam, color) {\n  ctx.beginPath();\n  ctx.moveTo(x2, y2);\n  ctx.lineTo(x2 - tam * Math.cos(ang - Math.PI / 7), y2 - tam * Math.sin(ang - Math.PI / 7));\n  ctx.lineTo(x2 - tam * Math.cos(ang + Math.PI / 7), y2 - tam * Math.sin(ang + Math.PI / 7));\n  ctx.closePath();\n  ctx.fillStyle = color;\n  ctx.fill();\n}\n\nfunction etiqueta(texto, x, y, tf, color, negrita) {\n  ctx.font = (negrita ? \"bold \" : \"\") + tf + \"px Segoe UI, Arial, sans-serif\";\n  var w = ctx.measureText(texto).width;\n  ctx.fillStyle = \"rgba(24,24,38,0.92)\";\n  ctx.fillRect(x - w / 2 - 3, y - tf / 2 - 2, w + 6, tf + 4);\n  ctx.fillStyle = color;\n  ctx.fillText(texto, x - w / 2, y + tf / 2 - 3);\n}\n\nfunction dibujarArista(i, j, P, enCam, enRev, hayCamino) {\n  var f = estado.flujo[i][j], c = estado.capacidad[i][j], r = estado.residual[i][j];\n  var esCam = enCam[i + \"_\" + j] === true, esRev = enRev[i + \"_\" + j] === true;\n  var color, grosor, alpha = 1, punteada = false;\n  if (esCam) { color = COL.camino; grosor = 3.8; }\n  else if (esRev) { color = COL.camino; grosor = 3.0; punteada = true; }\n  else if (f >= c) { color = COL.saturada; grosor = 2.4; punteada = true; alpha = hayCamino ? 0.5 : 0.95; }\n  else if (f > 0) { color = COL.flujo; grosor = 2.2; alpha = hayCamino ? 0.5 : 0.95; }\n  else { color = COL.libre; grosor = 1.2; alpha = hayCamino ? 0.35 : 0.75; }\n\n  var pi = P[i], pj = P[j], esc = (pi.escala + pj.escala) / 2;\n  var dx = pj.x - pi.x, dy = pj.y - pi.y;\n  var dist = Math.sqrt(dx * dx + dy * dy) || 1;\n  var ux = dx / dist, uy = dy / dist;\n  var rA = radioNodo(pi.escala), rB = radioNodo(pj.escala);\n  var off = (estado.capacidad[j][i] > 0) ? 6 * esc : 0;\n  var px = -uy, py = ux;\n  var x1 = pi.x + ux * rA + px * off, y1 = pi.y + uy * rA + py * off;\n  var x2 = pj.x - ux * (rB + 2) + px * off, y2 = pj.y - uy * (rB + 2) + py * off;\n\n  ctx.save();\n  ctx.globalAlpha = alpha;\n  ctx.strokeStyle = rgb(color);\n  ctx.lineWidth = Math.max(0.7, grosor * esc);\n  if (punteada && ctx.setLineDash) ctx.setLineDash([7 * esc, 4 * esc]);\n  ctx.beginPath();\n  ctx.moveTo(x1, y1);\n  ctx.lineTo(x2, y2);\n  ctx.stroke();\n  if (ctx.setLineDash) ctx.setLineDash([]);\n  flecha(x2, y2, Math.atan2(y2 - y1, x2 - x1), Math.max(5, 8 * esc), rgb(color));\n\n  var largo = dist - rA - rB;\n  if (esCam || esRev || largo > 34) {\n    var tf = Math.max(8, 11 * esc);\n    var mx = (x1 + x2) / 2 + px * 8 * esc, my = (y1 + y2) / 2 + py * 8 * esc;\n    var txt = f + \"/\" + c;\n    if (esRev) txt = \"rev \" + f + \"/\" + c;\n    etiqueta(txt, mx, my, tf, rgb(color), esCam || esRev);\n    if (esCam || esRev) {\n      var tf2 = Math.max(7, 9 * esc);\n      etiqueta(\"res: \" + (esRev ? estado.residual[j][i] : r), mx, my + tf + 2, tf2, \"rgba(250,179,135,0.85)\", false);\n    }\n  }\n  ctx.restore();\n}\n\nfunction dibujarNodo(i, P, enNodo) {\n  var p = P[i], rn = radioNodo(p.escala);\n  var base;\n  if (i === estado.fuente) base = COL.fuente;\n  else if (i === estado.sumidero) base = COL.sumidero;\n  else if (enNodo[i]) base = COL.camino;\n  else base = COL.normal;\n\n  if (enNodo[i]) {\n    ctx.beginPath();\n    ctx.arc(p.x, p.y, rn + 8, 0, Math.PI * 2);\n    ctx.fillStyle = \"rgba(250,179,135,0.30)\";\n    ctx.fill();\n    ctx.beginPath();\n    ctx.arc(p.x, p.y, rn + 4, 0, Math.PI * 2);\n    ctx.strokeStyle = rgb(COL.camino);\n    ctx.lineWidth = 2.5;\n    ctx.stroke();\n  }\n\n  ctx.beginPath();\n  ctx.arc(p.x + 3, p.y + 5, rn, 0, Math.PI * 2);\n  ctx.fillStyle = \"rgba(0,0,0,0.35)\";\n  ctx.fill();\n\n  var grad = ctx.createRadialGradient(p.x - rn * 0.35, p.y - rn * 0.4, rn * 0.15, p.x, p.y, rn);\n  grad.addColorStop(0, claro(base));\n  grad.addColorStop(1, oscuro(base));\n  ctx.beginPath();\n  ctx.arc(p.x, p.y, rn, 0, Math.PI * 2);\n  ctx.fillStyle = grad;\n  ctx.fill();\n  ctx.strokeStyle = \"rgba(20,20,30,0.9)\";\n  ctx.lineWidth = 1.5;\n  ctx.stroke();\n\n  var tn = Math.max(8, 12 * p.escala);\n  ctx.font = \"bold \" + tn + \"px Segoe UI, Arial, sans-serif\";\n  ctx.fillStyle = \"#101018\";\n  var et = \"v\" + i;\n  ctx.fillText(et, p.x - ctx.measureText(et).width / 2, p.y + tn / 3);\n\n  if (i === estado.fuente || i === estado.sumidero) {\n    var rol = (i === estado.fuente) ? \"FUENTE\" : \"SUMIDERO\";\n    var tr = Math.max(8, 10 * p.escala);\n    ctx.font = \"bold \" + tr + \"px Segoe UI, Arial, sans-serif\";\n    ctx.fillStyle = rgb(base);\n    ctx.fillText(rol, p.x - ctx.measureText(rol).width / 2, p.y + rn + tr + 3);\n  }\n}\n\nfunction leyenda() {\n  var items = [[\"Fuente\", COL.fuente, \"nodo\"], [\"Sumidero\", COL.sumidero, \"nodo\"],\n               [\"Camino aumentante\", COL.camino, \"linea\"], [\"Con flujo\", COL.flujo, \"linea\"],\n               [\"Saturada\", COL.saturada, \"linea\"], [\"Sin flujo\", COL.libre, \"linea\"]];\n  var alto = items.length * 16 + 10, ancho = 150;\n  var x = canvas.width - ancho - 8, y = canvas.height - alto - 8;\n  ctx.fillStyle = \"rgba(24,24,38,0.80)\";\n  ctx.fillRect(x, y, ancho, alto);\n  ctx.font = \"11px Segoe UI, Arial, sans-serif\";\n  for (var k = 0; k < items.length; k++) {\n    var yy = y + 14 + k * 16;\n    if (items[k][2] === \"nodo\") {\n      ctx.beginPath(); ctx.arc(x + 14, yy - 3, 5, 0, Math.PI * 2);\n      ctx.fillStyle = rgb(items[k][1]); ctx.fill();\n    } else {\n      ctx.strokeStyle = rgb(items[k][1]); ctx.lineWidth = 3;\n      ctx.beginPath(); ctx.moveTo(x + 8, yy - 3); ctx.lineTo(x + 20, yy - 3); ctx.stroke();\n    }\n    ctx.fillStyle = \"#cdd6f4\";\n    ctx.fillText(items[k][0], x + 28, yy);\n  }\n}\n\nfunction dibujar() {\n  ctx.fillStyle = \"#181826\";\n  ctx.fillRect(0, 0, canvas.width, canvas.height);\n\n  if (!estado) {\n    ctx.fillStyle = \"#8b90ad\";\n    ctx.font = \"italic 16px Segoe UI, Arial, sans-serif\";\n    var msg = \"Genera la matriz para ver la red de flujo.\";\n    ctx.fillText(msg, (canvas.width - ctx.measureText(msg).width) / 2, canvas.height / 2);\n    return;\n  }\n\n  var n = estado.n, P = proyectarTodos(), i, j, k;\n  var hayCamino = estado.camino && estado.camino.length > 1;\n  var enCam = {}, enRev = {}, enNodo = {};\n  if (hayCamino) {\n    for (k = 0; k + 1 < estado.camino.length; k++) {\n      var a = estado.camino[k], b = estado.camino[k + 1];\n      if (estado.capacidad[a][b] > 0) enCam[a + \"_\" + b] = true;\n      else enRev[b + \"_\" + a] = true;\n    }\n    for (k = 0; k < estado.camino.length; k++) enNodo[estado.camino[k]] = true;\n  }\n\n  var elementos = [];\n  for (i = 0; i < n; i++) {\n    for (j = 0; j < n; j++) {\n      if (estado.capacidad[i][j] <= 0) continue;\n      elementos.push({ tipo: \"arista\", i: i, j: j, prof: (P[i].z + P[j].z) / 2 });\n    }\n  }\n  if (modo === \"3d\") {\n    for (i = 0; i < n; i++) elementos.push({ tipo: \"nodo\", i: i, prof: P[i].z });\n    elementos.sort(function (a, b) { return b.prof - a.prof; });\n  }\n  /* las aristas del camino se dibujan al final para que queden encima */\n  var normales = [], destacadas = [];\n  for (k = 0; k < elementos.length; k++) {\n    var el = elementos[k];\n    if (el.tipo === \"arista\" && (enCam[el.i + \"_\" + el.j] || enRev[el.i + \"_\" + el.j])) destacadas.push(el);\n    else normales.push(el);\n  }\n  var todos = normales.concat(destacadas);\n  for (k = 0; k < todos.length; k++) {\n    var e2 = todos[k];\n    if (e2.tipo === \"arista\") dibujarArista(e2.i, e2.j, P, enCam, enRev, hayCamino);\n    else dibujarNodo(e2.i, P, enNodo);\n  }\n  if (modo !== \"3d\") for (i = 0; i < n; i++) dibujarNodo(i, P, enNodo);\n\n  ctx.fillStyle = \"#e6e6f0\";\n  ctx.font = \"bold 15px Segoe UI, Arial, sans-serif\";\n  ctx.fillText(estado.titulo, 14, 26);\n  if (estado.etiquetaPaso) {\n    ctx.fillStyle = \"#fab387\";\n    ctx.font = \"bold 13px Segoe UI, Arial, sans-serif\";\n    ctx.fillText(estado.etiquetaPaso, canvas.width - ctx.measureText(estado.etiquetaPaso).width - 14, 26);\n  }\n  if (hayCamino) {\n    var cam = \"Camino: \";\n    for (k = 0; k < estado.camino.length; k++) cam += \"v\" + estado.camino[k] + (k < estado.camino.length - 1 ? \" \\u2192 \" : \"\");\n    cam += \"    Cuello de botella: \" + estado.cuello + \"    Flujo acumulado: \" + estado.flujoAcumulado;\n    ctx.fillStyle = \"#fab387\";\n    ctx.font = \"13px Segoe UI, Arial, sans-serif\";\n    ctx.fillText(cam, 14, 48);\n  }\n  if (estado.esFinal) {\n    var t = \"ALGORITMO COMPLETADO   \\u2014   FLUJO M\\u00C1XIMO: \" + estado.flujoMax;\n    ctx.font = \"bold 20px Segoe UI, Arial, sans-serif\";\n    var tw = ctx.measureText(t).width;\n    var bx = (canvas.width - tw) / 2 - 18, by = 38;\n    ctx.fillStyle = \"rgba(166,227,161,0.16)\";\n    ctx.fillRect(bx, by, tw + 36, 38);\n    ctx.strokeStyle = \"rgba(166,227,161,0.9)\";\n    ctx.lineWidth = 1.5;\n    ctx.strokeRect(bx, by, tw + 36, 38);\n    ctx.fillStyle = \"#a6e3a1\";\n    ctx.fillText(t, bx + 18, by + 26);\n  }\n  leyenda();\n}\n\ncanvas.oncontextmenu = function () { return false; };\nfunction posMouse(e) {\n  var r = canvas.getBoundingClientRect();\n  return { x: e.clientX - r.left, y: e.clientY - r.top };\n}\nfunction nodoEn(x, y) {\n  if (!estado) return -1;\n  var P = proyectarTodos(), mejor = -1, mejorZ = 1e9;\n  for (var i = 0; i < P.length; i++) {\n    var dx = P[i].x - x, dy = P[i].y - y;\n    if (Math.sqrt(dx * dx + dy * dy) <= radioNodo(P[i].escala) + 3 && P[i].z < mejorZ) { mejor = i; mejorZ = P[i].z; }\n  }\n  return mejor;\n}\ncanvas.addEventListener(\"mousedown\", function (e) {\n  if (!estado) return;\n  var pm = posMouse(e);\n  ultX = pm.x; ultY = pm.y; arr = true;\n  var pan = (e.button === 2) || e.shiftKey;\n  if (modo === \"2d\") {\n    var k = pan ? -1 : nodoEn(pm.x, pm.y);\n    if (k >= 0) { tipoArr = \"nodo\"; nodoArr = k; } else tipoArr = \"pan\";\n  } else {\n    tipoArr = pan ? \"pan\" : \"rotar\";\n  }\n  canvas.style.cursor = \"grabbing\";\n  if (e.preventDefault) e.preventDefault();\n});\nwindow.addEventListener(\"mouseup\", function () { arr = false; tipoArr = \"\"; nodoArr = -1; canvas.style.cursor = \"grab\"; });\nwindow.addEventListener(\"mousemove\", function (e) {\n  if (!arr || !estado) return;\n  var pm = posMouse(e);\n  var dx = pm.x - ultX, dy = pm.y - ultY;\n  ultX = pm.x; ultY = pm.y;\n  if (tipoArr === \"rotar\") {\n    angY += dx * 0.008; angX += dy * 0.008;\n    if (angX > 1.5) angX = 1.5;\n    if (angX < -1.5) angX = -1.5;\n  } else if (tipoArr === \"pan\") {\n    if (modo === \"3d\") { pan3X += dx; pan3Y += dy; } else { pan2X += dx; pan2Y += dy; }\n  } else if (tipoArr === \"nodo\" && nodoArr >= 0) {\n    unit2[nodoArr].x += dx / (canvas.width * 0.40 * zoom2);\n    unit2[nodoArr].y += dy / (canvas.height * 0.36 * zoom2);\n  }\n  dibujar();\n});\ncanvas.addEventListener(\"wheel\", function (e) {\n  if (e.preventDefault) e.preventDefault();\n  if (!estado) return;\n  var pm = posMouse(e);\n  var factor = (e.deltaY > 0) ? 0.88 : 1.14;\n  var cx = canvas.width / 2, cy = canvas.height / 2;\n  if (modo === \"3d\") {\n    var nz = Math.max(0.15, Math.min(12, zoom3 * factor));\n    factor = nz / zoom3; zoom3 = nz;\n    pan3X = (pm.x - cx) - ((pm.x - cx) - pan3X) * factor;\n    pan3Y = (pm.y - cy) - ((pm.y - cy) - pan3Y) * factor;\n  } else {\n    var nz2 = Math.max(0.15, Math.min(12, zoom2 * factor));\n    factor = nz2 / zoom2; zoom2 = nz2;\n    pan2X = (pm.x - cx) - ((pm.x - cx) - pan2X) * factor;\n    pan2Y = (pm.y - cy) - ((pm.y - cy) - pan2Y) * factor;\n  }\n  dibujar();\n}, false);\ncanvas.addEventListener(\"dblclick\", function () { ajustarVista(); });\n\n/* ---------- API llamada desde C++ ---------- */\nwindow.actualizarGrafo = function (jsonStr) {\n  try {\n    var nuevo = JSON.parse(jsonStr);\n    var clave = nuevo.n + \"_\" + nuevo.fuente + \"_\" + nuevo.sumidero + \"_\" + nuevo.claveCap;\n    var reajustar = false;\n    if (clave !== claveLayout) {\n      estado = nuevo;\n      calcularLayouts();\n      claveLayout = clave;\n      reajustar = true;\n    }\n    estado = nuevo;\n    if (reajustar) ajustarVista(); else dibujar();\n  } catch (err) { }\n};\nwindow.setModo = function (m) {\n  modo = (m === \"2d\") ? \"2d\" : \"3d\";\n  actualizarAyuda();\n  if (estado) ajustarVista(); else dibujar();\n};\nwindow.ajustarVista = ajustarVista;\nwindow.limpiarGrafo = function () { estado = null; claveLayout = \"\"; dibujar(); };\n\n\n// ---- soporte tactil (celular / tablet): 1 dedo = arrastrar, 2 dedos = zoom ----\n(function () {\n  canvas.style.touchAction = \"none\";\n  var dist0 = 0;\n  function fire(tipo, t) {\n    var ev = new MouseEvent(tipo, { clientX: t.clientX, clientY: t.clientY, button: 0, bubbles: true, cancelable: true });\n    (tipo === \"mousedown\" ? canvas : window).dispatchEvent(ev);\n  }\n  function d(e) { var a = e.touches[0], b = e.touches[1]; return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }\n  canvas.addEventListener(\"touchstart\", function (e) {\n    e.preventDefault();\n    if (e.touches.length === 1) fire(\"mousedown\", e.touches[0]);\n    else if (e.touches.length === 2) { window.dispatchEvent(new MouseEvent(\"mouseup\")); dist0 = d(e); }\n  }, { passive: false });\n  canvas.addEventListener(\"touchmove\", function (e) {\n    e.preventDefault();\n    if (e.touches.length === 1) fire(\"mousemove\", e.touches[0]);\n    else if (e.touches.length === 2) {\n      var nd = d(e);\n      if (Math.abs(nd - dist0) > 6) {\n        var mx = (e.touches[0].clientX + e.touches[1].clientX) / 2, my = (e.touches[0].clientY + e.touches[1].clientY) / 2;\n        canvas.dispatchEvent(new WheelEvent(\"wheel\", { deltaY: nd < dist0 ? 100 : -100, clientX: mx, clientY: my, cancelable: true }));\n        dist0 = nd;\n      }\n    }\n  }, { passive: false });\n  canvas.addEventListener(\"touchend\", function (e) { e.preventDefault(); window.dispatchEvent(new MouseEvent(\"mouseup\")); }, { passive: false });\n  var ult = 0;\n  canvas.addEventListener(\"touchstart\", function () { var t = Date.now(); if (t - ult < 300) ajustarVista(); ult = t; }, { passive: true });\n})();\n\nactualizarAyuda();\najustarTamano();\n<\/script>\n<\/body>\n<\/html>\n";</script>
+<script src="logic.js"></script>
+<script src="vendor/tesseract.min.js"></script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), FM=window.FM;
+let n=6,cap=FM.vacia(6),pasos=[],paso=0,src=0,snk=5,modoM=0,modo3D=true,timer=null,ready=false,ultimo=null,scanMat=null,stream=null,fotoLista=false;
+const vista=$('vista');
+vista.addEventListener('load',()=>{ready=true;try{vista.contentWindow.setModo(modo3D?'3d':'2d')}catch(e){} if(ultimo)enviar(ultimo)});
+vista.srcdoc=window.RENDERER_HTML;
+
+/* ---------- vista de la red ---------- */
+function enviar(o){ultimo=o;if(!ready)return;try{vista.contentWindow.actualizarGrafo(JSON.stringify(o))}catch(e){}}
+function pasoVigente(){ if(pasos.length)return pasos[paso];
+  return {camino:[],cambios:[],cuello:0,flujo:FM.vacia(n),residual:FM.copia(cap),acumulado:0,flujoMax:0,esFinal:false,titulo:'Red de flujo (sin flujo asignado)'};}
+function estadoJson(p,et){let h=17;for(const f of cap)for(const v of f)h=(h*31+v)|0;
+  return{n,fuente:src,sumidero:snk,titulo:p.titulo,etiquetaPaso:et||'',claveCap:h,esFinal:p.esFinal,flujoMax:p.flujoMax,flujoAcumulado:p.acumulado,cuello:p.cuello,capacidad:cap,flujo:p.flujo,residual:p.residual,camino:p.camino};}
+function mostrarPrevia(){ if(!cap.length)return; src=+$('cs').value;snk=+$('ct').value; enviar(estadoJson(pasoVigente(),'')); if(modoM)pintarGrid(); }
+
+/* ---------- matriz (grid editable) ---------- */
+function construirGrid(){
+  let h='<table class="g"><tr><th></th>'; for(let j=0;j<n;j++)h+=`<th>v${j}</th>`; h+='</tr>';
+  for(let i=0;i<n;i++){h+=`<tr><th>v${i}</th>`;for(let j=0;j<n;j++)h+=`<td><input inputmode="numeric" data-i="${i}" data-j="${j}" ${i===j?'readonly tabindex="-1"':''} autocomplete="off"></td>`;h+='</tr>';}
+  $('gwrap').innerHTML=h+'</table>'; pintarGrid();
+}
+function pintarGrid(force){
+  const p=pasoVigente(),M=modoM===0?cap:modoM===1?p.flujo:p.residual,hl=new Set();
+  p.cambios.forEach(c=>{const a=c.reversa?c.hasta:c.desde,b=c.reversa?c.desde:c.hasta;hl.add(a*n+b);if(modoM===2)hl.add(c.hasta*n+c.desde)});
+  $('gwrap').querySelectorAll('input').forEach(inp=>{const i=+inp.dataset.i,j=+inp.dataset.j,v=M[i][j],td=inp.parentNode;
+    if(force||document.activeElement!==inp)inp.value=(i===j)?'0':v; inp.readOnly=(modoM!==0||i===j);
+    td.className=i===j?'dg':hl.has(i*n+j)?'hl':(modoM===1&&v>0)?'fl':v===0?'cero':'';});
+}
+function leerGrid(){ $('gwrap').querySelectorAll('input').forEach(inp=>{const i=+inp.dataset.i,j=+inp.dataset.j;if(i===j){cap[i][j]=0;return}
+  let v=parseInt(inp.value,10);if(isNaN(v)||v<0)v=0;cap[i][j]=v;});}
+function invalidar(){ if(pasos.length){detener();pasos=[];paso=0;resetNav();$('log').textContent='La matriz cambió. Presiona "Calcular flujo máximo" para recalcular.';} mostrarPrevia(); }
+$('gwrap').addEventListener('input',e=>{ if(modoM!==0||!e.target.dataset.i)return; e.target.value=e.target.value.replace(/\D/g,'').slice(0,4); leerGrid(); invalidar();});
+$('gwrap').addEventListener('focusin',e=>{if(e.target.select)setTimeout(()=>e.target.select(),0)});
+$('gwrap').addEventListener('keydown',e=>{const t=e.target;if(!t.dataset||t.dataset.i===undefined)return;let i=+t.dataset.i,j=+t.dataset.j,m=true;
+  if(e.key==='Enter')i+=e.shiftKey?-1:1;else if(e.key==='ArrowDown')i++;else if(e.key==='ArrowUp')i--;else if(e.key==='ArrowRight'&&t.selectionStart===t.value.length)j++;else if(e.key==='ArrowLeft'&&t.selectionStart===0)j--;else m=false;
+  if(!m)return;e.preventDefault();if(i<0||j<0||i>=n||j>=n)return;const x=$('gwrap').querySelector(`input[data-i="${i}"][data-j="${j}"]`);if(x)x.focus();});
+$('gwrap').addEventListener('paste',e=>{ if(modoM!==0)return;const t=e.target;if(!t.dataset||t.dataset.i===undefined)return;
+  const txt=(e.clipboardData||window.clipboardData).getData('text');const M=FM.parsearTexto(txt);if(!M.length||(M.length===1&&M[0].length===1))return;
+  e.preventDefault();const i0=+t.dataset.i,j0=+t.dataset.j;
+  M.forEach((f,a)=>f.forEach((v,b)=>{const i=i0+a,j=j0+b;if(i<n&&j<n&&i!==j)cap[i][j]=v}));pintarGrid(true);invalidar();$('log').textContent='Se pegó una matriz de '+M.length+'×'+M[0].length+' desde el portapapeles.';});
+function setModoM(m){if(modoM===0)leerGrid();modoM=m;['m0','m1','m2'].forEach((id,k)=>$(id).classList.toggle('on',k===m));pintarGrid();}
+['m0','m1','m2'].forEach((id,k)=>$(id).onclick=()=>setModoM(k));
+
+/* ---------- combos / nueva matriz ---------- */
+function combos(){const o=Array.from({length:n},(_,i)=>`<option value="${i}">v${i}</option>`).join('');$('cs').innerHTML=o;$('ct').innerHTML=o;$('cs').value=0;$('ct').value=n-1;}
+function nuevaMatriz(M,msg){ detener(); cap=M;n=M.length;$('n').value=n;pasos=[];paso=0;modoM=0;['m0','m1','m2'].forEach((id,k)=>$(id).classList.toggle('on',k===0));
+  construirGrid();combos();resetNav();src=0;snk=n-1;$('log').textContent=msg;mostrarPrevia();}
+$('bGen').onclick=()=>{const nn=Math.max(3,Math.min(15,+$('n').value||6)),g=Math.max(2,Math.min(6,+$('gmax').value||3));
+  nuevaMatriz(FM.generar(nn,g),`MATRIZ GENERADA\n\nRed con grado máximo ${g}, sin flechas que entren a la fuente (v0) ni salgan del sumidero (v${nn-1}).\nSelecciona fuente y sumidero y presiona "Calcular flujo máximo".`);};
+$('bVacia').onclick=()=>{const nn=Math.max(3,Math.min(15,+$('n').value||6));nuevaMatriz(FM.vacia(nn),'INGRESO MANUAL\n\nCompleta la matriz (Enter baja, Tab/flechas se mueven) o usa "Pegar / aristas" o "Escanear matriz" para llenarla rápido.');};
+
+/* ---------- calcular y navegar ---------- */
+function resetNav(){$('barra').max=0;$('barra').value=0;$('barra').disabled=true;['bPrev','bNext','bPlay','bRe'].forEach(i=>$(i).disabled=true);$('lpaso').textContent='';$('flujo').textContent='Flujo actual: -';$('tcamb').innerHTML='';}
+$('bCalc').onclick=()=>{
+  if($('cs').value===$('ct').value){alert('La fuente y el sumidero deben ser distintos.');return}
+  detener(); if(modoM===0)leerGrid(); src=+$('cs').value;snk=+$('ct').value;
+  const q=FM.sanear(cap,n,src,snk); if(q){pintarGrid();}
+  const r=FM.edmondsKarp(cap,n,src,snk);pasos=r.pasos;paso=0;
+  $('barra').max=pasos.length-1;$('barra').disabled=false;$('bPlay').disabled=false;$('bRe').disabled=false;
+  if(q)$('log').dataset.aviso=`Se quitaron ${q} flecha(s) que entraban a la fuente o salían del sumidero (no aportan al flujo).\n\n`;else delete $('log').dataset.aviso;
+  vistaPaso();};
+const nom=c=>c.map(x=>'v'+x).join(' → ');
+function explicacion(p){
+  if(p.esFinal)return `RESULTADO FINAL\n\nNo existe más camino aumentante en la red residual.\nFlujo máximo = ${p.flujoMax}\nIteraciones: ${p.iter}`;
+  if(!p.camino.length)return `RED INICIAL\n\nFuente: v${src} · Sumidero: v${snk}\nTodavía no se asignó flujo. Cada iteración busca (BFS) el camino más corto con capacidad residual > 0 y lo satura hasta su cuello de botella.`;
+  const mins=p.cambios.map(c=>`${c.resAntes}`).join(', ');
+  return `ITERACIÓN ${p.iter}\n\nCamino (BFS): ${nom(p.camino)}\nResiduales del camino: ${mins}\nCuello de botella = mín(${mins}) = ${p.cuello}\n\nSe suma ${p.cuello} al flujo en cada arista (o se cancela flujo en las reversas) y se actualizan los residuales.\nFlujo acumulado: ${p.acumulado}`;}
+function tabla(p){ if(!p.cambios.length){$('tcamb').innerHTML='<table><tr><th>Sin cambios en este paso</th></tr></table>';return}
+  $('tcamb').innerHTML='<table><tr><th>Arista</th><th>Residual</th><th>Flujo</th><th>Nota</th></tr>'+p.cambios.map(c=>`<tr><td>v${c.desde} → v${c.hasta}</td><td>${c.resAntes} → ${c.resDespues}</td><td>${c.flAntes} → ${c.flDespues}</td><td>${c.nota}</td></tr>`).join('')+'</table>';}
+function vistaPaso(){const p=pasos[paso],et=`Paso ${paso+1} de ${pasos.length}`;
+  $('lpaso').textContent=et;$('flujo').textContent='Flujo actual: '+p.acumulado+(p.esFinal?'  (máximo)':'');$('barra').value=paso;
+  $('bPrev').disabled=paso===0;$('bNext').disabled=paso>=pasos.length-1;
+  $('log').textContent=($('log').dataset.aviso||'')+explicacion(p);tabla(p);enviar(estadoJson(p,et));pintarGrid();}
+function detener(){if(timer){clearInterval(timer);timer=null}$('bPlay').textContent='▶ Reproducir';}
+$('bPrev').onclick=()=>{if(paso>0){paso--;vistaPaso()}};$('bNext').onclick=()=>{if(paso<pasos.length-1){paso++;vistaPaso()}};
+$('bRe').onclick=()=>{detener();paso=0;vistaPaso()};
+$('barra').oninput=e=>{detener();paso=+e.target.value;vistaPaso()};
+$('bPlay').onclick=()=>{if(timer){detener();return}if(paso>=pasos.length-1){paso=0;vistaPaso()}$('bPlay').textContent='❚❚ Pausar';
+  timer=setInterval(()=>{if(paso>=pasos.length-1){detener();return}paso++;vistaPaso();if(paso>=pasos.length-1)detener()},1400);};
+function setVista(d){modo3D=d;$('b3d').classList.toggle('on',d);$('b2d').classList.toggle('on',!d);try{vista.contentWindow.setModo(d?'3d':'2d')}catch(e){}}
+$('b3d').onclick=()=>setVista(true);$('b2d').onclick=()=>setVista(false);$('bFit').onclick=()=>{try{vista.contentWindow.ajustarVista()}catch(e){}};
+$('cs').onchange=$('ct').onchange=()=>{if(!pasos.length)mostrarPrevia()};
+
+/* ---------- pegar texto / aristas ---------- */
+$('bPegar').onclick=()=>{$('pTxt').value='';$('dPegar').showModal();$('pTxt').focus()};$('pCerrar').onclick=()=>$('dPegar').close();
+$('pApply').onclick=()=>{const t=$('pTxt').value.trim();if(!t)return;
+  const E=FM.parsearAristas(t),lineas=t.split('\n').filter(l=>l.trim()).length;let M;
+  if(E.length&&E.length>=lineas*0.8&&!/^\s*[\d\s,;\t]+$/m.test(t.split('\n')[0])||E.length&&/[-=]>|:/.test(t)){M=FM.aristasAMatriz(E,0);}
+  else{const g=FM.parsearTexto(t);const k=Math.max(g.length,...g.map(r=>r.length));M=FM.vacia(k);g.forEach((r,i)=>r.forEach((v,j)=>{if(i!==j)M[i][j]=v}));}
+  if(M.length>15||M.length<2){alert('El tamaño detectado ('+M.length+') está fuera de 2–15 vértices.');return}
+  while(M.length<3){M.forEach(f=>f.push(0));M.push(new Array(M.length+1).fill(0))}
+  nuevaMatriz(M,'Matriz importada ('+M.length+'×'+M.length+'). Revisa y selecciona fuente/sumidero.');$('dPegar').close();};
+
+/* ---------- escáner (cámara / foto + OCR local) ---------- */
+function paraCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').style.display='none';$('sShot').style.display='none'}
+$('bScan').onclick=()=>{scanMat=null;$('sPrev').innerHTML='';$('sAv').innerHTML='';$('sApply').disabled=true;$('sRun').disabled=!fotoLista;$('sEst').textContent='';$('dScan').showModal()};
+$('sCerrar').onclick=()=>{paraCam();$('dScan').close()};$('dScan').addEventListener('close',paraCam);
+$('sCam').onclick=async()=>{ try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920}},audio:false});
+  const v=$('video');v.srcObject=stream;v.style.display='block';$('foto').style.display='none';await v.play();$('sShot').style.display='';
+ }catch(e){$('sEst').textContent='No se pudo abrir la cámara ('+(e.name||e)+'). Usa "Elegir / tomar foto".'}};
+$('sShot').onclick=()=>{const v=$('video'),c=$('foto');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);paraCam();c.style.display='block';fotoLista=true;$('sRun').disabled=false;};
+$('sFileBtn').onclick=()=>$('sFile').click();
+$('sFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{paraCam();const c=$('foto');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);c.style.display='block';URL.revokeObjectURL(img.src);fotoLista=true;$('sRun').disabled=false;$('sEst').textContent=''};img.src=URL.createObjectURL(f);e.target.value=''};
+function preparar(src){ // gris + escala + umbral adaptativo (mejora fotos con sombras)
+  const M=1800,k=Math.min(1,M/Math.max(src.width,src.height)),w=Math.round(src.width*k),h=Math.round(src.height*k),c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');x.drawImage(src,0,0,w,h);const d=x.getImageData(0,0,w,h),g=new Float32Array(w*h);
+  for(let i=0;i<w*h;i++)g[i]=.299*d.data[4*i]+.587*d.data[4*i+1]+.114*d.data[4*i+2];
+  const I=new Float64Array((w+1)*(h+1));for(let y=0;y<h;y++){let s=0;for(let xx=0;xx<w;xx++){s+=g[y*w+xx];I[(y+1)*(w+1)+xx+1]=I[y*(w+1)+xx+1]+s}}
+  const r=Math.max(12,Math.round(w/24));
+  for(let y=0;y<h;y++)for(let xx=0;xx<w;xx++){const x0=Math.max(0,xx-r),x1=Math.min(w,xx+r+1),y0=Math.max(0,y-r),y1=Math.min(h,y+r+1);
+    const m=(I[y1*(w+1)+x1]-I[y0*(w+1)+x1]-I[y1*(w+1)+x0]+I[y0*(w+1)+x0])/((x1-x0)*(y1-y0));const v=g[y*w+xx]<m*0.82?0:255;const o=4*(y*w+xx);d.data[o]=d.data[o+1]=d.data[o+2]=v;d.data[o+3]=255;}
+  x.putImageData(d,0,0);return c;}
+let worker=null;
+async function getWorker(){ if(worker)return worker;
+  worker=await Tesseract.createWorker('eng',1,{workerPath:new URL('vendor/worker.min.js',location.href).href,corePath:new URL('vendor/',location.href).href,langPath:new URL('vendor/',location.href).href,gzip:true,workerBlobURL:false,
+    logger:m=>{if(m.status)$('sEst').textContent=(m.status==='recognizing text'?'Reconociendo… '+Math.round(m.progress*100)+'%':'Cargando motor OCR…')}});
+  await worker.setParameters({tessedit_char_whitelist:'0123456789',tessedit_pageseg_mode:'11'});return worker;}
+$('sRun').onclick=async()=>{ $('sRun').disabled=true;$('sApply').disabled=true;$('sAv').innerHTML='';$('sPrev').innerHTML='';
+  try{ $('sEst').textContent='Preparando imagen…';const c=preparar($('foto'));const w=await getWorker();const r=await w.recognize(c);
+    const out=FM.matrizDesdePalabras(r.data.words,{n:+$('n').value});scanMat=out.mat;
+    $('sAv').innerHTML=out.avisos.map(a=>`<div class="aviso">⚠ ${a}</div>`).join('');
+    if(scanMat){let h='<table class="g"><tr><th></th>'+scanMat.map((_,j)=>`<th>v${j}</th>`).join('')+'</tr>';
+      scanMat.forEach((f,i)=>{h+=`<tr><th>v${i}</th>`+f.map((v,j)=>`<td><input inputmode="numeric" data-i="${i}" data-j="${j}" value="${v}" ${i===j?'readonly':''}></td>`).join('')+'</tr>'});
+      $('sPrev').innerHTML=h+'</table>';$('sApply').disabled=false;$('sEst').textContent='Corrige lo que haga falta y presiona "Aplicar".';}
+    else $('sEst').textContent='';
+  }catch(e){$('sEst').textContent='Error de OCR: '+(e.message||e)}
+  $('sRun').disabled=false;};
+$('sPrev').addEventListener('input',e=>{const t=e.target;if(!t.dataset.i)return;t.value=t.value.replace(/\D/g,'').slice(0,4);scanMat[+t.dataset.i][+t.dataset.j]=parseInt(t.value,10)||0});
+$('sApply').onclick=()=>{ if(!scanMat)return;let M=FM.copia(scanMat);if(M.length>15){alert('Máximo 15 vértices.');return}
+  while(M.length<3){M.forEach(f=>f.push(0));M.push(new Array(M.length+1).fill(0))}
+  nuevaMatriz(M,'Matriz leída desde imagen ('+M.length+'×'+M.length+'). Verifica los valores y presiona "Calcular".');paraCam();$('dScan').close();};
+
+/* ---------- inicio ---------- */
+nuevaMatriz(FM.generar(6,3),'MATRIZ GENERADA\n\nSelecciona fuente y sumidero y presiona "Calcular flujo máximo".');
+})();
+</script>
+</body>
+</html>

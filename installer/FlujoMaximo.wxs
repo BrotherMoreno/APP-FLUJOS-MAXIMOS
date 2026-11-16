@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSI de Flujo Maximo - WiX Toolset 5
+  Variables requeridas al compilar:
+    -d AppDir=<carpeta con la app empaquetada, p. ej. dist\win-unpacked>
+    -d Version=<x.y.z>
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Flujo Maximo"
+           Manufacturer="Brother Cordova"
+           Version="$(var.Version)"
+           UpgradeCode="5930482B-AEDE-429D-8A57-9612E04112AE"
+           Scope="perMachine"
+           Compressed="yes">
+
+    <MajorUpgrade DowngradeErrorMessage="Ya hay una version mas reciente de Flujo Maximo instalada." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="AppIcon.exe" SourceFile="$(var.AppDir)\FlujoMaximo.exe" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.exe" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="FlujoMaximo" />
+    </StandardDirectory>
+
+    <Component Id="MainExe" Directory="INSTALLFOLDER" Bitness="always64">
+      <File Id="FlujoMaximoExe" Source="$(var.AppDir)\FlujoMaximo.exe" KeyPath="yes">
+        <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Flujo Maximo"
+                  WorkingDirectory="INSTALLFOLDER" Advertise="yes" />
+        <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="Flujo Maximo"
+                  WorkingDirectory="INSTALLFOLDER" Advertise="yes" />
+      </File>
+    </Component>
+
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.AppDir)\**">
+        <Exclude Files="$(var.AppDir)\FlujoMaximo.exe" />
+      </Files>
+    </ComponentGroup>
+
+    <Feature Id="Main" Title="Flujo Maximo" Level="1">
+      <ComponentRef Id="MainExe" />
+      <ComponentGroupRef Id="AppFiles" />
+    </Feature>
+  </Package>
+</Wix>

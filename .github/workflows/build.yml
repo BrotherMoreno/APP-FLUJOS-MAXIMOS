@@ -1,0 +1,58 @@
+name: Compilar instaladores de Windows
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Compilar EXE (instalador y portable)
+        run: npm run dist
+
+      - name: Leer version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Instalar WiX 5
+        run: dotnet tool install --global wix --version 5.0.2
+
+      - name: Compilar MSI
+        run: wix build installer\FlujoMaximo.wxs -arch x64 -d AppDir=dist\win-unpacked -d Version=${{ steps.ver.outputs.version }} -o dist\FlujoMaximo-${{ steps.ver.outputs.version }}-x64.msi
+
+      - name: Subir archivos generados
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlujoMaximo-Windows
+          path: |
+            dist/*.exe
+            dist/*.msi
+          if-no-files-found: error
+
+      - name: Publicar en Releases (solo con etiqueta vX.Y.Z)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.msi
