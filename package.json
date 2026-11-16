@@ -18,7 +18,8 @@
   "build": {
     "appId": "pe.brothermoreno.flujomaximo",
     "productName": "FlujoMaximo",
-    "copyright": "Brother Cordova",
+    "icon": "build/icon.ico",
+    "copyright": "Brother Pablo Moreno Cordova",
     "asar": false,
     "directories": { "output": "dist" },
     "files": ["main.js", "package.json", "www/**/*"],
