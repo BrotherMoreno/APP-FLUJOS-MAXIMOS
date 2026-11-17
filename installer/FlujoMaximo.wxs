@@ -2,7 +2,8 @@
 <!--
   MSI de Flujo Maximo - WiX Toolset 5
   Variables requeridas al compilar:
-    -d AppDir=<carpeta con la app empaquetada, p. ej. dist\win-unpacked>
+    -d AppDir=<ruta ABSOLUTA de la app empaquetada, p. ej. C:\repo\dist\win-unpacked>
+    -d IconPath=<ruta ABSOLUTA del .ico, p. ej. C:\repo\build\icon.ico>
     -d Version=<x.y.z>
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
@@ -16,7 +17,7 @@
     <MajorUpgrade DowngradeErrorMessage="Ya hay una version mas reciente de Flujo Maximo instalada." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
-    <Icon Id="AppIcon" SourceFile="..\build\icon.ico" />
+    <Icon Id="AppIcon" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
