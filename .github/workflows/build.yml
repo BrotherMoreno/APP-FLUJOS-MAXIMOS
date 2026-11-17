@@ -38,7 +38,7 @@ jobs:
         run: dotnet tool install --global wix --version 5.0.2
 
       - name: Compilar MSI
-        run: wix build installer\FlujoMaximo.wxs -arch x64 -d AppDir=dist\win-unpacked -d Version=${{ steps.ver.outputs.version }} -d IconPath=icon.ico -o dist\FlujoMaximo-${{ steps.ver.outputs.version }}-x64.msi
+        run: wix build installer\FlujoMaximo.wxs -arch x64 -d AppDir=dist\win-unpacked -d Version=${{ steps.ver.outputs.version }} -d IconPath=..\icon.ico -o dist\FlujoMaximo-${{ steps.ver.outputs.version }}-x64.msi
 
       - name: Subir archivos generados
         uses: actions/upload-artifact@v4
