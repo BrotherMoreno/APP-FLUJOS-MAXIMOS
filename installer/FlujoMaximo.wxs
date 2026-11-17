@@ -16,7 +16,7 @@
     <MajorUpgrade DowngradeErrorMessage="Ya hay una version mas reciente de Flujo Maximo instalada." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
-    <Icon Id="AppIcon" SourceFile="..\build\icon.ico" />
+    <Icon Id="AppIcon" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
